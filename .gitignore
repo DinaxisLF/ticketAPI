@@ -1,0 +1,61 @@
+# Build artifacts
+bin/
+obj/
+[Bb]uild/
+[Ll]ogs/
+*.log
+
+
+# Deployment / publish
+publish/
+**/wwwroot/dist/
+*.Publish.xml
+
+# Configuration / secrets
+appsettings.*.json
+!appsettings.Development.json
+secrets.json
+*.key
+*.pem
+.env
+.env.local
+
+# Temp
+[Tt]emp/
+tmp/
+*.tmp
+*.temp
+
+# Coverage / reports
+coverage/
+coverage.*
+*.codecoverage
+TestResult*/
+Report*/ 
+
+# Resharper / Rider
+_ReSharper*/
+*.DotSettings.user
+.idea/
+
+
+
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+dist/
+.build/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+*.pid
+
+# Others
+*.swp
+*.orig
+*.patch
