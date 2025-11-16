@@ -1,5 +1,6 @@
 const Transaction = require("../models/transaction");
 const db = require("../config/config");
+const WhatsAppService = require("../services/whatsappService");
 
 module.exports = {
   async createTransaction(req, res, next) {
@@ -17,6 +18,8 @@ module.exports = {
         secciones_info,
         ticket_details,
         tipo_evento,
+        whatsapp_number, // ← NUEVO: Recibir el número de WhatsApp del frontend
+        eventData, // ← NUEVO: Recibir los datos del evento del frontend
       } = req.body;
 
       console.log("Datos recibidos para transacción:", req.body);
@@ -136,6 +139,24 @@ module.exports = {
         connection
       );
 
+      // 6. 📱 ENVIAR MENSAJE WHATSAPP (NO BLOQUEANTE) - ACTUALIZADO
+      module.exports.sendWhatsAppConfirmation(
+        whatsapp_number, // ← Usar el número del frontend en lugar del de la BD
+        {
+          eventData: eventData, // Usar eventData del frontend
+          ticketTypes: ticket_details.map((detail) => ({
+            quantity: detail.cantidad,
+            name: module.exports.getTicketTypeName(detail.categoria_boleto_id),
+            price: detail.precio_unitario,
+          })),
+          total: total_pagado,
+          selectedSeats: asientos_seleccionados,
+          transactionId: transactionId,
+          isMuseum: tipo_evento === "Museo",
+          paymentMethod: metodo_pago,
+        }
+      );
+
       res.status(201).json({
         success: true,
         message: "Transacción registrada exitosamente",
@@ -151,6 +172,62 @@ module.exports = {
       });
     } finally {
       connection.release();
+    }
+  },
+
+  // 📱 Método para enviar WhatsApp ACTUALIZADO
+  async sendWhatsAppConfirmation(whatsappNumber, purchaseData) {
+    try {
+      // Verificar si se proporcionó un número de WhatsApp
+      if (!whatsappNumber) {
+        console.log("📱 No se proporcionó número de WhatsApp, omitiendo envío");
+        return;
+      }
+
+      console.log(`📱 Enviando WhatsApp a: ${whatsappNumber}`);
+
+      // Enviar mensaje (esto es asíncrono y no espera)
+      WhatsAppService.sendPurchaseConfirmation(whatsappNumber, purchaseData)
+        .then((result) => {
+          if (result.success) {
+            console.log("✅ WhatsApp enviado exitosamente");
+          } else {
+            console.log("❌ WhatsApp no enviado:", result.error);
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Error en envío WhatsApp:", error);
+        });
+    } catch (error) {
+      console.error("❌ Error preparando WhatsApp:", error);
+      // No lanzar error para no afectar el flujo principal
+    }
+  },
+
+  // Método auxiliar para nombres de tipos de boletos (si no lo tienes)
+  getTicketTypeName(categoriaId) {
+    const tipos = {
+      1: "General",
+      2: "Balcón",
+      3: "Palco",
+      4: "Platea",
+    };
+    return tipos[categoriaId] || `Tipo ${categoriaId}`;
+  },
+
+  async getUserWithPhone(usuario_id) {
+    try {
+      const connection = await db.getConnection();
+      const [users] = await connection.execute(
+        "SELECT id, nombre, email, telefono FROM usuarios WHERE id = ?",
+        [usuario_id]
+      );
+      connection.release();
+
+      return users[0] || null;
+    } catch (error) {
+      console.error("Error obteniendo usuario:", error);
+      return null;
     }
   },
 
