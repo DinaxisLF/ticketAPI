@@ -18,8 +18,8 @@ module.exports = {
         secciones_info,
         ticket_details,
         tipo_evento,
-        whatsapp_number, // ← NUEVO: Recibir el número de WhatsApp del frontend
-        eventData, // ← NUEVO: Recibir los datos del evento del frontend
+        whatsapp_number,
+        eventData,
       } = req.body;
 
       console.log("Datos recibidos para transacción:", req.body);
@@ -211,6 +211,16 @@ module.exports = {
       2: "Balcón",
       3: "Palco",
       4: "Platea",
+      10: "Tradicional",
+      11: "Plus",
+      12: "VIP",
+      13: "MACRO XE",
+      14: "Junior",
+      15: "4DX",
+      16: "IMAX",
+      17: "VR",
+      18: "Screen X",
+      19: "General",
     };
     return tipos[categoriaId] || `Tipo ${categoriaId}`;
   },

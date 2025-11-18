@@ -6,9 +6,9 @@ module.exports = (app) => {
 
   app.post(
     "/api/users/admin",
-    UserController.createAdminUser,
+    Auth.verifyToken,
     Auth.requireAdmin,
-    Auth.verifyToken
+    UserController.createAdminUser
   );
 
   app.get("/api/users/exists/:username", UserController.checkUserExists);

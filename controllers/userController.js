@@ -14,18 +14,35 @@ module.exports = {
       return res.status(400).json({ message: "Faltan datos obligatorios" });
     }
 
+    console.log("Creando usuario:", user.nombre_usuario);
+    console.log("Correo:", user.correo);
+    console.log("Nombre:", user.nombre);
+
     try {
       const hash_password = await bcrypt.hash(user.password, 10);
 
+      console.log("Calling User.create...");
       const newUser = await User.create(user, hash_password);
 
+      console.log("User.create result:", newUser);
+
+      // Check the actual structure of newUser
       if (newUser.affectedRows === 1) {
         return res.status(201).json({ message: "Usuario creado exitosamente" });
       } else {
+        console.log("Unexpected result structure:", newUser);
         return res.status(500).json({ message: "No se pudo crear el usuario" });
       }
     } catch (error) {
       console.error("Error al crear usuario:", error);
+
+      // Handle specific database errors
+      if (error.code === "ER_DUP_ENTRY") {
+        return res
+          .status(400)
+          .json({ message: "El usuario o correo ya existe" });
+      }
+
       return res.status(500).json({ message: "Error al crear usuario" });
     }
   },
